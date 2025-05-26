@@ -1,70 +1,43 @@
-import React, { useState } from "react";
-import "./App.css";
+import React, { useEffect, useState } from "react";
 
-const TaskManager = () => {
-  const [tasks, setTasks] = useState([
-    { id: 1, title: "Tarefa 1", completed: false },
-    { id: 2, title: "Tarefa 2", completed: true },
-  ]);
-  const [newTaskTitle, setNewTaskTitle] = useState("");
+function App() {
+  const [ListaProdutos, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const addTask = (title) => {
-    if (!title.trim()) return;
-    const newTask = {
-      id: tasks.length + 1,
-      title,
-      completed: false,
-    };
-    setTasks([...tasks, newTask]);
-  };
+  useEffect(() => {
+    fetch("https://fakestoreapi.com/products?limit=1000")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Erro ao buscar dados da API");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setTasks(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setError(error.message);
+        setLoading(false);
+      });
+  }, []); // Executa só uma vez ao carregar
 
-  const updateTask = (id, updatedTitle, updatedCompleted) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === id ? { ...task, title: updatedTitle, completed: updatedCompleted } : task
-      )
-    );
-  };
-
-  const deleteTask = (id) => {
-    setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
-  };
+  if (loading) return <p>Carregando...</p>;
+  if (error) return <p>Erro: {error}</p>;
 
   return (
-    <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
-      <h2>Lista de Tarefas</h2>
+    <div style={{ padding: "20px" }}>
+      <h1>Lista de produtos</h1>
       <ul>
-        {tasks.map((task) => (
-          <li key={task.id}>
-            <span>
-              {task.title} - {task.completed ? "Concluída" : "Pendente"}
-            </span>
-            <button onClick={() => updateTask(task.id, task.title, !task.completed)}>
-              Alternar
-            </button>
-            <button onClick={() => deleteTask(task.id)}>Excluir</button>
+        {ListaProdutos.map((produto) => (
+          <li key={produto.id}>
+            {produto.title} {produto.price} {produto.category} 
           </li>
         ))}
       </ul>
-
-      <div style={{ marginTop: "20px" }}>
-        <input
-          type="text"
-          value={newTaskTitle}
-          onChange={(e) => setNewTaskTitle(e.target.value)}
-          placeholder="Nova tarefa"
-        />
-        <button
-          onClick={() => {
-            addTask(newTaskTitle);
-            setNewTaskTitle("");
-          }}
-        >
-          Adicionar
-        </button>
-      </div>
     </div>
   );
-};
+}
 
-export default TaskManager;
+export default App;
